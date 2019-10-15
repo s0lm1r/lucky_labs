@@ -193,12 +193,11 @@ function gameLoop(delta) {
         if (moveRight) spaceship.position.x += 2;
         if (spaceship.position.x > (bg.width - spaceship.width / 2)) {
             spaceship.position.x = bg.width - spaceship.width / 2
-        };
+        }
         if (spaceship.position.x < (spaceship.width / 2 )) {
             spaceship.position.x = spaceship.width / 2
-        };
+        }
     }
-
     if (destroyed > 4) {
         gameWinScene.visible = true;
         gameScene.visible = false;
@@ -215,46 +214,44 @@ function gameLoop(delta) {
     if (tutorial) {
         timeLeft += delta;
         secondsLeft += delta;
-
-    if (secondsLeft > 60) {
-        secondsLeft = 0;
-        displayedSec--;
-        gameScene.removeChild(timer);
-        timer = new PIXI.Text('Time:' + displayedSec, styleGameOver); 
-        gameScene.addChild(timer);
-    }
-    
-    for (let j = 0; j < asteroids.length; j++) {
-        if (asteroids[j])  {
-            asteroids[j].x += Math.sin(asteroids[j].direction) * asteroids[j].speed;
-            asteroids[j].y += Math.cos(asteroids[j].direction) * asteroids[j].speed * asteroids[j].directionY; 
-                if (asteroids[j].x < 60 || asteroids[j].x > 1230) asteroids[j].direction  *= -1;
-                if (asteroids[j].y < 60 || asteroids[j].y > 450) asteroids[j].directionY *= -1;
-            for (let l = 0; l < asteroids.length; l++) {
-                if (asteroids[j] === asteroids[l]) continue;  
-                if (hitTestCircle(asteroids[j], asteroids[l])) {       
-                    asteroids[j].direction  *= -1;
-                    asteroids[j].directionY *= -1;
-                }
-            }   
+        if (secondsLeft > 60) {
+            secondsLeft = 0;
+            displayedSec--;
+            gameScene.removeChild(timer);
+            timer = new PIXI.Text('Time:' + displayedSec, styleGameOver); 
+            gameScene.addChild(timer);
         }
-    }
-    for (let i = 0; i < bullets.length; i++) { 
-        bullets[i].position.y -= 5;
-            if (shootsAmount === 0) lastShoot = bullets[bullets.length -1];
-            
-        for (let k = 0; k < asteroids.length; k++) {
-            if (!bullets[i]) return;
-            if (hitTestCircle(bullets[i],asteroids[k])) {
-                destroyed++;
-                isHited = true;
-                gameScene.removeChild(asteroids[k]);
-                gameScene.removeChild(bullets[i]);
-                asteroids.splice(k, 1);
-                bullets.splice(i, 1);
+        for (let j = 0; j < asteroids.length; j++) {
+            if (asteroids[j])  {
+                asteroids[j].x += Math.sin(asteroids[j].direction) * asteroids[j].speed;
+                asteroids[j].y += Math.cos(asteroids[j].direction) * asteroids[j].speed * asteroids[j].directionY; 
+                    if (asteroids[j].x < 60 || asteroids[j].x > 1230) asteroids[j].direction  *= -1;
+                    if (asteroids[j].y < 60 || asteroids[j].y > 450) asteroids[j].directionY *= -1;
+                for (let l = 0; l < asteroids.length; l++) {
+                    if (asteroids[j] === asteroids[l]) continue;  
+                    if (hitTestCircle(asteroids[j], asteroids[l])) {       
+                        asteroids[j].direction  *= -1;
+                        asteroids[j].directionY *= -1;
+                    }
+                }   
             }
-        } 
-    }}     
+        }
+        for (let i = 0; i < bullets.length; i++) { 
+            bullets[i].position.y -= 5;
+                if (shootsAmount === 0) lastShoot = bullets[bullets.length -1];
+            for (let k = 0; k < asteroids.length; k++) {
+                if (!bullets[i]) return;
+                if (hitTestCircle(bullets[i],asteroids[k])) {
+                    destroyed++;
+                    isHited = true;
+                    gameScene.removeChild(asteroids[k]);
+                    gameScene.removeChild(bullets[i]);
+                    asteroids.splice(k, 1);
+                    bullets.splice(i, 1);
+                }
+            } 
+        }
+    }     
     if (timeLeft > timeForLevel ||
         (shootsAmount < 1 && destroyed < 5 &&
         (lastShoot.position.y < 0 || isHited))) {
@@ -277,7 +274,7 @@ function randomInteger(min, max) {
 function hitTestCircle(c1, c2) {
    
     let hit = false, r1, r2, dx, dy;
-    
+
     c1.centerX = c1.x;
     c1.centerY = c1.y;
     c2.centerX = c2.x;
@@ -286,7 +283,7 @@ function hitTestCircle(c1, c2) {
     r2 = (c2.width / 2) - 5;
     dx = c1.centerX - c2.centerX;
     dy = c1.centerY - c2.centerY;
-  
+    
     if (Math.sqrt(dx * dx + dy * dy) < (r1 + r2)) {
             hit = true;
         } else {
