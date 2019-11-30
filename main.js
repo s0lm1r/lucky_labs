@@ -6,6 +6,7 @@ PIXI.loader
 .add("images/background.png")
 .add("images/asteroid.png")
 .add("images/spaceship.png")
+.add("images/arrow.png")
 .load(setup);
 
 const gameScene = new PIXI.Container();
@@ -28,6 +29,7 @@ let lastShoot = null;
 
 let asteroids = [];
 let bullets = [];
+let arrows = [];
 let isShooted = false;
 let isBulletCreated = false;
 let tweenStarted = false;
@@ -85,6 +87,23 @@ function setup() {
     bg = new PIXI.Sprite(PIXI.utils.TextureCache["images/background.png"]);
     bgEnd = new PIXI.Sprite(PIXI.utils.TextureCache["images/background.png"]);
     bgWin = new PIXI.Sprite(PIXI.utils.TextureCache["images/background.png"]);
+    
+   
+    const graphics = new PIXI.Graphics();
+    graphics.lineStyle(10, 0xFF0000, 1);
+    graphics.beginFill(0x00ff00, 1);
+    graphics.drawCircle(400, 250, 50);
+    graphics.endFill();
+    graphics.interactive = true;
+    graphics.buttonMode = true;
+    
+    graphics.position.set(900, 535);
+    graphics
+        .on('pointerdown', onDragStart)
+        .on('pointerup', onDragEnd);
+       
+    
+    graphics.scale.set(0.6)
     bg.anchor.set(0.5);
     bg.position.set(bg.width / 2, bg.height / 2)
     gameScene.addChild(bg);
@@ -98,7 +117,7 @@ function setup() {
     gameWinScene.addChild(gameWinText);
     gameWinText.anchor.set(0.5);
     gameWinText.position.set(bg.width / 2, bg.height / 4);
-
+    
     gameScene.addChild(timer);
     
     for (let i = 0; i < 5; i++) {
@@ -109,18 +128,85 @@ function setup() {
         asteroid.direction = Math.random() * Math.PI * 2;
         asteroid.directionY = 1;
         asteroid.speed = 2 + Math.random();
-        asteroids.push(asteroid); 
+        asteroids.push(asteroid);
+        
         gameScene.addChild(asteroid);
     }
     spaceship = new PIXI.Sprite(PIXI.utils.TextureCache["images/spaceship.png"]);
+
     gameScene.addChild(spaceship);
-    spaceship.position.set(bg.width / 2, bg.height / 2 + 1.5 * spaceship.height);
+    spaceship.position.set(bg.width / 2, bg.height / 2 + 1.3 * spaceship.height);
     spaceship.anchor.set(0.5);
+   
+    
+    
     gameScene.addChild(tutorialText);
+    gameScene.addChild(graphics);
+     for (let i = 0; i < 2; i++) {
+        let arrow = arrows[i] = new PIXI.Sprite(PIXI.utils.TextureCache["images/arrow.png"]);
+        
+        arrow.scale.set(0.4, 0.4);
+        arrow.anchor.set(0.5);
+        arrow.rotation = i === 0 ? Math.PI/2 : -Math.PI/2;
+        arrow.position.set(50+2*arrow.width * i + 1050*i, 685);
+        gameScene.addChild(arrow);
+        
+    }
+    arrows[1].interactive = true;
+    arrows[1].buttonMode = true;
+    arrows[1]
+        .on('pointerdown', onDragStartArrowR)
+        .on('pointerup', onDragendArrowR);
+    function onDragStartArrowR(event) {
+    tutorial = true;
+    
+    moveRight = true;
+    }
+    function onDragendArrowR(event) {
+        
+        
+        moveRight = !true;
+        }
+    
+        arrows[0].interactive = true;
+        arrows[0].buttonMode = true;
+        arrows[0]
+            .on('pointerdown', onDragStartArrowL)
+            .on('pointerup', onDragendArrowL);
+        function onDragStartArrowL(event) {
+        tutorial = true;
+        
+        moveLeft = true;
+        }
+        function onDragendArrowL(event) {
+            
+            
+            moveLeft = !true;
+            }
+   // gameScene.addChild(graphics);
     tutorialText.anchor.set(0.5);
     tutorialText.position.set(bg.width / 2, bg.height / 2);
     startTween();
 
+    function onDragStart(event) {
+      
+        //this.data = event.data;
+        tutorial = true;  
+            if(!isShooted && shootsAmount > 0) {
+                createBullet();
+                isShooted = true;
+                isHited = false;
+                shootsAmount--;
+            }
+
+    }
+    
+    function onDragEnd() {
+        //this.data = null;
+        isShooted = false;
+    }
+    
+    
     function checkKeyDown(event) {
        
         if (event.key === 'ArrowRight') {
@@ -193,11 +279,12 @@ function gameLoop(delta) {
         if (moveRight) spaceship.position.x += 2;
         if (spaceship.position.x > (bg.width - spaceship.width / 2)) {
             spaceship.position.x = bg.width - spaceship.width / 2
-        }
+        };
         if (spaceship.position.x < (spaceship.width / 2 )) {
             spaceship.position.x = spaceship.width / 2
-        }
+        };
     }
+
     if (destroyed > 4) {
         gameWinScene.visible = true;
         gameScene.visible = false;
@@ -214,44 +301,46 @@ function gameLoop(delta) {
     if (tutorial) {
         timeLeft += delta;
         secondsLeft += delta;
-        if (secondsLeft > 60) {
-            secondsLeft = 0;
-            displayedSec--;
-            gameScene.removeChild(timer);
-            timer = new PIXI.Text('Time:' + displayedSec, styleGameOver); 
-            gameScene.addChild(timer);
-        }
-        for (let j = 0; j < asteroids.length; j++) {
-            if (asteroids[j])  {
-                asteroids[j].x += Math.sin(asteroids[j].direction) * asteroids[j].speed;
-                asteroids[j].y += Math.cos(asteroids[j].direction) * asteroids[j].speed * asteroids[j].directionY; 
-                    if (asteroids[j].x < 60 || asteroids[j].x > 1230) asteroids[j].direction  *= -1;
-                    if (asteroids[j].y < 60 || asteroids[j].y > 450) asteroids[j].directionY *= -1;
-                for (let l = 0; l < asteroids.length; l++) {
-                    if (asteroids[j] === asteroids[l]) continue;  
-                    if (hitTestCircle(asteroids[j], asteroids[l])) {       
-                        asteroids[j].direction  *= -1;
-                        asteroids[j].directionY *= -1;
-                    }
-                }   
-            }
-        }
-        for (let i = 0; i < bullets.length; i++) { 
-            bullets[i].position.y -= 5;
-                if (shootsAmount === 0) lastShoot = bullets[bullets.length -1];
-            for (let k = 0; k < asteroids.length; k++) {
-                if (!bullets[i]) return;
-                if (hitTestCircle(bullets[i],asteroids[k])) {
-                    destroyed++;
-                    isHited = true;
-                    gameScene.removeChild(asteroids[k]);
-                    gameScene.removeChild(bullets[i]);
-                    asteroids.splice(k, 1);
-                    bullets.splice(i, 1);
+
+    if (secondsLeft > 60) {
+        secondsLeft = 0;
+        displayedSec--;
+        gameScene.removeChild(timer);
+        timer = new PIXI.Text('Time:' + displayedSec, styleGameOver); 
+        gameScene.addChild(timer);
+    }
+    
+    for (let j = 0; j < asteroids.length; j++) {
+        if (asteroids[j])  {
+            asteroids[j].x += Math.sin(asteroids[j].direction) * asteroids[j].speed;
+            asteroids[j].y += Math.cos(asteroids[j].direction) * asteroids[j].speed * asteroids[j].directionY; 
+                if (asteroids[j].x < 60 || asteroids[j].x > 1230) asteroids[j].direction  *= -1;
+                if (asteroids[j].y < 60 || asteroids[j].y > 450) asteroids[j].directionY *= -1;
+            for (let l = 0; l < asteroids.length; l++) {
+                if (asteroids[j] === asteroids[l]) continue;  
+                if (hitTestCircle(asteroids[j], asteroids[l])) {       
+                    asteroids[j].direction  *= -1;
+                    asteroids[j].directionY *= -1;
                 }
-            } 
+            }   
         }
-    }     
+    }
+    for (let i = 0; i < bullets.length; i++) { 
+        bullets[i].position.y -= 5;
+            if (shootsAmount === 0) lastShoot = bullets[bullets.length -1];
+            
+        for (let k = 0; k < asteroids.length; k++) {
+            if (!bullets[i]) return;
+            if (hitTestCircle(bullets[i],asteroids[k])) {
+                destroyed++;
+                isHited = true;
+                gameScene.removeChild(asteroids[k]);
+                gameScene.removeChild(bullets[i]);
+                asteroids.splice(k, 1);
+                bullets.splice(i, 1);
+            }
+        } 
+    }}     
     if (timeLeft > timeForLevel ||
         (shootsAmount < 1 && destroyed < 5 &&
         (lastShoot.position.y < 0 || isHited))) {
@@ -274,7 +363,7 @@ function randomInteger(min, max) {
 function hitTestCircle(c1, c2) {
    
     let hit = false, r1, r2, dx, dy;
-
+    
     c1.centerX = c1.x;
     c1.centerY = c1.y;
     c2.centerX = c2.x;
@@ -283,7 +372,7 @@ function hitTestCircle(c1, c2) {
     r2 = (c2.width / 2) - 5;
     dx = c1.centerX - c2.centerX;
     dy = c1.centerY - c2.centerY;
-    
+  
     if (Math.sqrt(dx * dx + dy * dy) < (r1 + r2)) {
             hit = true;
         } else {
